@@ -1,7 +1,11 @@
 // libraries
 const mongoose = require("mongoose");
 
-const sessionSchema = mongoose.Schema({
+const historySchema = mongoose.Schema({
+    ip: {
+        type: String,
+        required: true,
+    },
     country: {
         type: String,
         required: true,
@@ -21,10 +25,9 @@ const sessionSchema = mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true
     }
 }, {timestamps: true});
 
-const Session = mongoose.model("Session", sessionSchema);
+const History = mongoose.model("History", historySchema);
 
-module.exports = Session;
+module.exports = History;
