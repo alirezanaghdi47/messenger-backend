@@ -18,10 +18,6 @@ const historySchema = mongoose.Schema({
         type: String,
         required: true,
     },
-    device: {
-        type: String,
-        required: true,
-    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

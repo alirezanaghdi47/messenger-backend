@@ -27,7 +27,7 @@ const upload = multer({
         filename: (req, file, cb) => {
             const extArray = file.mimetype.split("/");
             const extension = extArray[extArray.length - 1];
-            cb(null, path.parse(file.originalname).name + '-' + Date.now() + '.' + extension);
+            cb(null, Date.now() + '.' + extension);
         }
     })
 });

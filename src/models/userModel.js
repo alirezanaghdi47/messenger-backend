@@ -8,26 +8,48 @@ const userSchema = mongoose.Schema({
     },
     userName: {
         type: String,
+        minLength: 8, 
+        maxLength: 40,
         required: true
     },
     email: {
         type: String,
         required: true
     },
+    isVisible: {
+        type: Boolean,
+        default: true,
+    },
     biography: {
         type: String,
         default: null,
         maxLength: 200,
     },
-    settingId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Setting",
-        required: true
+    language: {
+        type: String,
+        default: "fa",
     },
-    privacyId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Privacy",
-        required: true
+    darkMode: {
+        type: Boolean,
+        default: false,
+    },
+    fontSize: {
+        type: Number,
+        default: 14,
+    },
+    color: {
+        light: {
+            type: String,
+            default: "#2563eb",
+        },
+        dark: {
+            type: String,
+            default: "#60a5fa",
+        },
+    },
+    background: {
+        type: String,
+        default: "/images/desktop-1.jpg",
     }
 }, {timestamps: true});
 
