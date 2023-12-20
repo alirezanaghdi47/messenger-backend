@@ -11,8 +11,6 @@ const app = express();
 // controllers
 const authController = require("./src/controllers/authController.js");
 const userController = require("./src/controllers/userController.js");
-const historyController = require("./src/controllers/historyController.js");
-const blockController = require("./src/controllers/blockController.js");
 
 // middlewares
 app.use(
@@ -34,8 +32,6 @@ app.use(bodyParser.json());
 // routes
 app.use("/api/auth", authController);
 app.use("/api/user", userController);
-app.use("/api/history", historyController);
-app.use("/api/block", blockController);
 
 // oauth
 require("./src/middlewares/passport");

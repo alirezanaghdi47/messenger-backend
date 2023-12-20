@@ -156,20 +156,4 @@ router.put("/editTheme", requireAuth, async (req, res) => {
     }
 });
 
-router.put("/editVisibility", requireAuth, async (req, res) => {
-    try {
-        const {isVisible} = req.body;
-
-        await User.findOneAndUpdate(
-            {_id: res.locals.user._id},
-            {isVisible},
-            {new: true}
-        );
-
-        res.status(200).json({data: isVisible, message: "نمایش وضعیت کاربر اصلاح شد", status: "success"});
-    } catch (err) {
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
-    }
-});
-
 module.exports = router;
