@@ -1,30 +1,18 @@
 // libraries
 const mongoose = require("mongoose");
 
-const messageSchema = mongoose.Schema({
+const logSchema = mongoose.Schema({
     type: {
         type: Number,
         required: true
     },
-    content: {
-        type: String,
-        required: true
-    },
-    name: {
-        type: String,
-    },
-    size: {
-        type: Number,
-    },
     duration: {
         type: Number,
+        required: true
     },
-    thumbnail: {
-        type: String,
-    },
-    isViewed: {
-        type: Boolean,
-        default: false
+    status: {
+        type: Number,
+        required: true
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -38,6 +26,6 @@ const messageSchema = mongoose.Schema({
     },
 }, {timestamps: true});
 
-const Message = mongoose.model("Message", messageSchema);
+const Log = mongoose.model("Log", logSchema);
 
-module.exports = Message;
+module.exports = Log;

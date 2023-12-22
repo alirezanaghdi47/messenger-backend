@@ -16,25 +16,6 @@ const groupSchema = mongoose.Schema({
         default: null,
         maxLength: 200,
     },
-    isPrivate: {
-        type: Boolean,
-        default: false,
-    },
-    invitationLink: {
-        type: String,
-        default: null,
-    },
-    admin: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true
-    },
-    members: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-        }
-    ]
 }, {timestamps: true});
 
 const Group = mongoose.model("Group", groupSchema);

@@ -11,6 +11,8 @@ const app = express();
 // controllers
 const authController = require("./src/controllers/authController.js");
 const userController = require("./src/controllers/userController.js");
+const chatController = require("./src/controllers/chatController.js");
+const messageController = require("./src/controllers/messageController.js");
 
 // middlewares
 app.use(
@@ -32,6 +34,8 @@ app.use(bodyParser.json());
 // routes
 app.use("/api/auth", authController);
 app.use("/api/user", userController);
+app.use("/api/chat", chatController);
+app.use("/api/message", messageController);
 
 // oauth
 require("./src/middlewares/passport");

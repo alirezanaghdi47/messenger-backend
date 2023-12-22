@@ -14,6 +14,31 @@ const User = require("../models/userModel.js");
 
 const router = express.Router();
 
+router.get("/getAllUser", requireAuth, async (req, res) => {
+    try {
+        const users = await User.find({_id: {$ne: res.locals.user._id}})
+            .sort({createAt: -1})
+            .exec();
+
+        res.status(200).json({data: users, status: "success"});
+    } catch (err) {
+        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+    }
+});
+
+router.get("/getUser", requireAuth, async (req, res) => {
+    try {
+        const {userid} = req.body;
+
+        const user = await User.findById(userid)
+            .exec();
+
+        res.status(200).json({data: user, status: "success"});
+    } catch (err) {
+        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+    }
+});
+
 router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, res) => {
     try {
         const {preview , userName, biography} = req.body;

@@ -16,14 +16,18 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    isVisible: {
-        type: Boolean,
-        default: true,
-    },
     biography: {
         type: String,
         default: null,
         maxLength: 200,
+    },
+    isOnline: {
+        type: Boolean,
+        default: false
+    },
+    lastSeen: {
+        type: Date,
+        default: Date.now
     },
     language: {
         type: String,
