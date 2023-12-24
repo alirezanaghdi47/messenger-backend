@@ -3,10 +3,9 @@ const path = require("path");
 const express = require("express");
 const fs = require("fs");
 const sharp = require('sharp');
-const {PutObjectCommand, DeleteObjectCommand} = require("@aws-sdk/client-s3");
 
 // middlewares
-const {upload, client} = require("../middlewares/upload.js");
+const {upload} = require("../middlewares/upload.js");
 const {requireAuth} = require("../middlewares/authentication");
 
 // models
@@ -46,37 +45,24 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
         let avatarPath = preview;
 
         if (req.file) {
-            const fileName = `avatar-compressed-${res.locals.user._id}-${req.file.filename.replace(path.extname(req.file.filename), ".webp")}`;
-            const filePath = path.resolve("uploads", fileName);
-
-            await sharp(req.file.path)
-                .toFormat("webp")
-                .resize({width: 240, height: 240, fit: "cover"})
-                .toFile(filePath);
 
             if (avatarPath) {
                 const fileName = path.basename(avatarPath);
-
-                const params = {
-                    Bucket: process.env.BUCKET_NAME,
-                    Key: "avatar/" + fileName,
-                };
-
-                await client.send(new DeleteObjectCommand(params));
+                const filePath = path.resolve("uploads" , "avatar" , fileName);
+                await fs.unlinkSync(filePath);
             }
 
-            avatarPath = path.join(process.env.ASSETS_URL, "avatar" ,fileName);
+            const fileName = `${res.locals.user._id}-${req.file.filename}`;
+            const oldFilePath = req.file.path;
+            const newFilePath = path.resolve("uploads" , "avatar", fileName);
 
-            const params = {
-                Body: fs.readFileSync(filePath),
-                Bucket: process.env.BUCKET_NAME,
-                Key: "avatar/" + fileName,
-            };
+            await sharp(oldFilePath)
+                .resize({width: 240, height: 240, fit: "cover"})
+                .toFile(newFilePath);
 
-            await client.send(new PutObjectCommand(params));
+            await fs.unlinkSync(oldFilePath);
 
-            await fs.unlinkSync(req.file.path);
-            await fs.unlinkSync(filePath);
+            avatarPath = process.env.ASSET_URL + "/avatar/" + fileName;
         }
 
         await User.findOneAndUpdate(
@@ -97,6 +83,7 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
 
         res.status(200).json({data: result, message: "پروفایل اصلاح شد", status: "success"});
     } catch (err) {
+        console.log(err)
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
 });

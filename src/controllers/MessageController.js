@@ -2,10 +2,9 @@
 const path = require("path");
 const fs = require("fs");
 const express = require("express");
-const {PutObjectCommand} = require("@aws-sdk/client-s3");
 
 // middlewares
-const {upload, client} = require("../middlewares/upload.js");
+const {upload} = require("../middlewares/upload.js");
 const {requireAuth} = require("../middlewares/authentication");
 
 // models
@@ -89,26 +88,16 @@ router.post("/addFileMessage", [requireAuth, upload.single("file")], async (req,
             return res.status(404).json({message: "فایل ارسال نشد", status: "failure"});
         }
 
-        const fileName = `file-${res.locals.user._id}-${req.file.filename}`;
+        const fileName = `${req.file.filename}-${Date.now()}`;
         const fileSize = req.file.size;
-        const filePath = req.file.path;
-        const localFilePath = path.resolve("uploads", fileName);
-        const globalFilePath = path.join(process.env.ASSETS_URL, "file", fileName);
+        const oldFilePath = req.file.path;
+        const newFilePath = path.resolve("uploads" , "file", fileName);
 
-        const params = {
-            Body: fs.readFileSync(localFilePath),
-            Bucket: process.env.BUCKET_NAME,
-            Key: "file/" + globalFilePath,
-        };
-
-        await client.send(new PutObjectCommand(params));
-
-        await fs.unlinkSync(filePath);
-        await fs.unlinkSync(localFilePath);
+        fs.renameSync(oldFilePath, newFilePath);
 
         const newMessage = new Message({
             type: messageType.file,
-            content: globalFilePath,
+            content: process.env.ASSET_URL + "/file/" + fileName,
             name: fileName,
             size: fileSize,
             userId: res.locals.user._id,
@@ -140,26 +129,16 @@ router.post("/addImageMessage", [requireAuth, upload.single("image")], async (re
             return res.status(404).json({message: "عکس ارسال نشد", status: "failure"});
         }
 
-        const fileName = `image-${res.locals.user._id}-${req.file.filename}`;
+        const fileName = `${req.file.filename}-${Date.now()}`;
         const fileSize = req.file.size;
-        const filePath = req.file.path;
-        const localFilePath = path.resolve("uploads", fileName);
-        const globalFilePath = path.join(process.env.ASSETS_URL, "image", fileName);
+        const oldFilePath = req.file.path;
+        const newFilePath = path.resolve("uploads" , "image", fileName);
 
-        const params = {
-            Body: fs.readFileSync(localFilePath),
-            Bucket: process.env.BUCKET_NAME,
-            Key: "image/" + globalFilePath,
-        };
-
-        await client.send(new PutObjectCommand(params));
-
-        await fs.unlinkSync(filePath);
-        await fs.unlinkSync(localFilePath);
+        fs.renameSync(oldFilePath, newFilePath);
 
         const newMessage = new Message({
             type: messageType.image,
-            content: globalFilePath,
+            content: process.env.ASSET_URL + "/image/" + fileName,
             name: fileName,
             size: fileSize,
             userId: res.locals.user._id,
@@ -191,26 +170,16 @@ router.post("/addVideoMessage", [requireAuth, upload.single("video")], async (re
             return res.status(404).json({message: "ویدیو ارسال نشد", status: "failure"});
         }
 
-        const fileName = `video-${res.locals.user._id}-${req.file.filename}`;
+        const fileName = `${req.file.filename}-${Date.now()}`;
         const fileSize = req.file.size;
-        const filePath = req.file.path;
-        const localFilePath = path.resolve("uploads", fileName);
-        const globalFilePath = path.join(process.env.ASSETS_URL, "video", fileName);
+        const oldFilePath = req.file.path;
+        const newFilePath = path.resolve("uploads" , "video", fileName);
 
-        const params = {
-            Body: fs.readFileSync(localFilePath),
-            Bucket: process.env.BUCKET_NAME,
-            Key: "video/" + globalFilePath,
-        };
-
-        await client.send(new PutObjectCommand(params));
-
-        await fs.unlinkSync(filePath);
-        await fs.unlinkSync(localFilePath);
+        fs.renameSync(oldFilePath, newFilePath);
 
         const newMessage = new Message({
             type: messageType.video,
-            content: globalFilePath,
+            content: process.env.ASSET_URL + "/video/" + fileName,
             name: fileName,
             size: fileSize,
             userId: res.locals.user._id,
@@ -242,26 +211,16 @@ router.post("/addMusicMessage", [requireAuth, upload.single("music")], async (re
             return res.status(404).json({message: "موسیقی ارسال نشد", status: "failure"});
         }
 
-        const fileName = `music-${res.locals.user._id}-${req.file.filename}`;
+        const fileName = `${req.file.filename}-${Date.now()}`;
         const fileSize = req.file.size;
-        const filePath = req.file.path;
-        const localFilePath = path.resolve("uploads", fileName);
-        const globalFilePath = path.join(process.env.ASSETS_URL, "music", fileName);
+        const oldFilePath = req.file.path;
+        const newFilePath = path.resolve("uploads" , "music", fileName);
 
-        const params = {
-            Body: fs.readFileSync(localFilePath),
-            Bucket: process.env.BUCKET_NAME,
-            Key: "music/" + globalFilePath,
-        };
-
-        await client.send(new PutObjectCommand(params));
-
-        await fs.unlinkSync(filePath);
-        await fs.unlinkSync(localFilePath);
+        fs.renameSync(oldFilePath, newFilePath);
 
         const newMessage = new Message({
             type: messageType.music,
-            content: globalFilePath,
+            content: process.env.ASSET_URL + "/music/" + fileName,
             name: fileName,
             size: fileSize,
             userId: res.locals.user._id,
@@ -306,7 +265,7 @@ router.post("/addLocationMessage", requireAuth, async (req, res) => {
 
 router.delete("/deleteMessage", requireAuth, async (req, res) => {
     try {
-        const {messageid} = req.header;
+        const {messageid} = req.headers;
 
         if (!isValidObjectId(messageid)) {
             return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
@@ -316,6 +275,18 @@ router.delete("/deleteMessage", requireAuth, async (req, res) => {
 
         if (!message) {
             return res.status(409).json({message: "پیامی با این مشخصات وجود ندارد", status: "failure"});
+        }
+
+        if (message.type !== 0 && message.type !== 5) {
+            const fileName = path.basename(message?.content);
+            let filePath;
+
+            if (message.type === 1) filePath = path.resolve("uploads" , "file" , fileName);
+            if (message.type === 2) filePath = path.resolve("uploads" , "image" , fileName);
+            if (message.type === 3) filePath = path.resolve("uploads" , "music" , fileName);
+            if (message.type === 4) filePath = path.resolve("uploads" , "video" , fileName);
+
+            await fs.unlinkSync(filePath);
         }
 
         await Message.deleteOne({_id: messageid});
