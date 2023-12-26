@@ -52,7 +52,7 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
                 await fs.unlinkSync(filePath);
             }
 
-            const fileName = `${res.locals.user._id}-${req.file.filename}`;
+            const fileName = req.file.filename;
             const oldFilePath = req.file.path;
             const newFilePath = path.resolve("uploads" , "avatar", fileName);
 

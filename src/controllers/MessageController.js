@@ -2,6 +2,10 @@
 const path = require("path");
 const fs = require("fs");
 const express = require("express");
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpeg_static = require('ffmpeg-static');
+const ffprobe = require('ffprobe');
+const ffprobeStatic = require('ffprobe-static');
 
 // middlewares
 const {upload} = require("../middlewares/upload.js");
@@ -88,10 +92,10 @@ router.post("/addFileMessage", [requireAuth, upload.single("file")], async (req,
             return res.status(404).json({message: "فایل ارسال نشد", status: "failure"});
         }
 
-        const fileName = `${req.file.filename}-${Date.now()}`;
+        const fileName = req.file.filename;
         const fileSize = req.file.size;
         const oldFilePath = req.file.path;
-        const newFilePath = path.resolve("uploads" , "file", fileName);
+        const newFilePath = path.resolve("uploads", "file", fileName);
 
         fs.renameSync(oldFilePath, newFilePath);
 
@@ -129,10 +133,10 @@ router.post("/addImageMessage", [requireAuth, upload.single("image")], async (re
             return res.status(404).json({message: "عکس ارسال نشد", status: "failure"});
         }
 
-        const fileName = `${req.file.filename}-${Date.now()}`;
+        const fileName = req.file.filename;
         const fileSize = req.file.size;
         const oldFilePath = req.file.path;
-        const newFilePath = path.resolve("uploads" , "image", fileName);
+        const newFilePath = path.resolve("uploads", "image", fileName);
 
         fs.renameSync(oldFilePath, newFilePath);
 
@@ -170,18 +174,36 @@ router.post("/addVideoMessage", [requireAuth, upload.single("video")], async (re
             return res.status(404).json({message: "ویدیو ارسال نشد", status: "failure"});
         }
 
-        const fileName = `${req.file.filename}-${Date.now()}`;
+        const fileName = req.file.filename;
         const fileSize = req.file.size;
+        const fileThumbnailName = path.parse(fileName).name + ".png";
+        const fileThumbnailFolder = path.resolve("uploads", "thumbnail");
         const oldFilePath = req.file.path;
-        const newFilePath = path.resolve("uploads" , "video", fileName);
+        const newFilePath = path.resolve("uploads", "video", fileName);
 
-        fs.renameSync(oldFilePath, newFilePath);
+        await fs.renameSync(oldFilePath, newFilePath);
+
+        const fileInfo = await ffprobe(newFilePath, {path: ffprobeStatic.path});
+        const fileDuration = fileInfo.streams[0].duration;
+
+        await ffmpeg(newFilePath)
+            .setFfmpegPath(ffmpeg_static)
+            .screenshots({
+                timestamps: [Math.floor(fileDuration / 4)],
+                filename: fileThumbnailName,
+                folder: fileThumbnailFolder,
+                size: "640x360"
+            }).on('end', function () {
+                console.log('done');
+            });
 
         const newMessage = new Message({
             type: messageType.video,
             content: process.env.ASSET_URL + "/video/" + fileName,
             name: fileName,
             size: fileSize,
+            duration: fileDuration,
+            thumbnail: process.env.ASSET_URL + "/thumbnail/" + fileThumbnailName,
             userId: res.locals.user._id,
             chatId: chatid
         });
@@ -189,6 +211,7 @@ router.post("/addVideoMessage", [requireAuth, upload.single("video")], async (re
 
         res.status(200).json({message: "ویدیو ارسال شد", status: "success"});
     } catch (err) {
+        console.log(err);
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
 });
@@ -211,18 +234,22 @@ router.post("/addMusicMessage", [requireAuth, upload.single("music")], async (re
             return res.status(404).json({message: "موسیقی ارسال نشد", status: "failure"});
         }
 
-        const fileName = `${req.file.filename}-${Date.now()}`;
+        const fileName = req.file.filename;
         const fileSize = req.file.size;
         const oldFilePath = req.file.path;
-        const newFilePath = path.resolve("uploads" , "music", fileName);
+        const newFilePath = path.resolve("uploads", "music", fileName);
 
-        fs.renameSync(oldFilePath, newFilePath);
+        await fs.renameSync(oldFilePath, newFilePath);
+
+        const fileInfo = await ffprobe(newFilePath, {path: ffprobeStatic.path});
+        const fileDuration = fileInfo.streams[0].duration;
 
         const newMessage = new Message({
             type: messageType.music,
             content: process.env.ASSET_URL + "/music/" + fileName,
             name: fileName,
             size: fileSize,
+            duration: fileDuration,
             userId: res.locals.user._id,
             chatId: chatid
         });
@@ -277,16 +304,31 @@ router.delete("/deleteMessage", requireAuth, async (req, res) => {
             return res.status(409).json({message: "پیامی با این مشخصات وجود ندارد", status: "failure"});
         }
 
-        if (message.type !== 0 && message.type !== 5) {
+        if (message.type === 1) {
             const fileName = path.basename(message?.content);
-            let filePath;
-
-            if (message.type === 1) filePath = path.resolve("uploads" , "file" , fileName);
-            if (message.type === 2) filePath = path.resolve("uploads" , "image" , fileName);
-            if (message.type === 3) filePath = path.resolve("uploads" , "music" , fileName);
-            if (message.type === 4) filePath = path.resolve("uploads" , "video" , fileName);
-
+            const filePath = path.resolve("uploads", "file", fileName);
             await fs.unlinkSync(filePath);
+        }
+
+        if (message.type === 2) {
+            const fileName = path.basename(message?.content);
+            const filePath = path.resolve("uploads", "image", fileName);
+            await fs.unlinkSync(filePath);
+        }
+
+        if (message.type === 3) {
+            const fileName = path.basename(message?.content);
+            const filePath = path.resolve("uploads", "music", fileName);
+            await fs.unlinkSync(filePath);
+        }
+
+        if (message.type === 4) {
+            const fileName1 = path.basename(message?.content);
+            // const fileName2 = path.basename(message?.thumbnail);
+            const filePath1 = path.resolve("uploads", "video", fileName1);
+            // const filePath2 = path.resolve("uploads", "thumbnail", fileName2);
+            await fs.unlinkSync(filePath1);
+            // await fs.unlinkSync(filePath2);
         }
 
         await Message.deleteOne({_id: messageid});
