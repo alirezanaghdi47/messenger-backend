@@ -1,6 +1,5 @@
 // libraries
 const express = require("express");
-const fetch = require("node-fetch");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
 

@@ -21,14 +21,6 @@ const userSchema = mongoose.Schema({
         default: null,
         maxLength: 200,
     },
-    isOnline: {
-        type: Boolean,
-        default: false
-    },
-    lastSeen: {
-        type: Date,
-        default: Date.now
-    },
     language: {
         type: String,
         default: "fa",

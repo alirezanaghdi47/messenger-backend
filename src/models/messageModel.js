@@ -22,10 +22,6 @@ const messageSchema = mongoose.Schema({
     thumbnail: {
         type: String,
     },
-    isViewed: {
-        type: Boolean,
-        default: false
-    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

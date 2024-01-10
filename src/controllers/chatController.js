@@ -60,10 +60,12 @@ router.post("/addChat", requireAuth, async (req, res) => {
             return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
         }
 
-        const chat = await Chat.findOne({participantIds: {$in: [res.locals.user._id, receiverid]}})
+        const chat = await Chat.findOne({participantIds: {$all: [res.locals.user._id, receiverid]}})
+            .populate("participantIds")
+            .exec();
 
         if (chat) {
-            return res.status(200).json({data: chat, status: "success"});
+            return res.status(200).json({data: null, status: "success"});
         }
 
         const newChat = new Chat({
@@ -72,7 +74,11 @@ router.post("/addChat", requireAuth, async (req, res) => {
         });
         await newChat.save();
 
-        res.status(200).json({data: newChat, status: "success"});
+        const newChat2 = await Chat.findById(newChat._id)
+            .populate("participantIds")
+            .exec();
+
+        res.status(200).json({data: newChat2, status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
@@ -118,7 +124,9 @@ router.delete("/deleteChat", requireAuth, async (req, res) => {
             return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
         }
 
-        const chat = await Chat.findById(chatid);
+        const chat = await Chat.findById(chatid)
+            .populate("participantIds")
+            .exec();
 
         if (!chat) {
             return res.status(409).json({message: "چت با این مشخصات وجود ندارد", status: "failure"});
@@ -127,7 +135,7 @@ router.delete("/deleteChat", requireAuth, async (req, res) => {
         await Chat.deleteOne({_id: chatid});
         await Message.deleteMany({chatId: {$eq: chatid}});
 
-        res.status(200).json({message: "چت حذف شد", status: "success"});
+        res.status(200).json({data: chat, message: "چت حذف شد", status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }

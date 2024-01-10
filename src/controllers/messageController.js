@@ -68,7 +68,11 @@ router.post("/addTextMessage", requireAuth, async (req, res) => {
         });
         await newMessage.save();
 
-        res.status(200).json({message: "متن ارسال شد", status: "success"});
+        const message = await Message.findById(newMessage._id)
+            .populate("userId")
+            .exec();
+
+        res.status(200).json({data: message, message: "متن ارسال شد", status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
@@ -109,7 +113,11 @@ router.post("/addFileMessage", [requireAuth, upload.single("file")], async (req,
         });
         await newMessage.save();
 
-        res.status(200).json({message: "فایل ارسال شد", status: "success"});
+        const message = await Message.findById(newMessage._id)
+            .populate("userId")
+            .exec();
+
+        res.status(200).json({data: message, message: "فایل ارسال شد", status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
@@ -150,7 +158,11 @@ router.post("/addImageMessage", [requireAuth, upload.single("image")], async (re
         });
         await newMessage.save();
 
-        res.status(200).json({message: "عکس ارسال شد", status: "success"});
+        const message = await Message.findById(newMessage._id)
+            .populate("userId")
+            .exec();
+
+        res.status(200).json({data: message, message: "عکس ارسال شد", status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
@@ -209,7 +221,11 @@ router.post("/addVideoMessage", [requireAuth, upload.single("video")], async (re
         });
         await newMessage.save();
 
-        res.status(200).json({message: "ویدیو ارسال شد", status: "success"});
+        const message = await Message.findById(newMessage._id)
+            .populate("userId")
+            .exec();
+
+        res.status(200).json({data: message, message: "ویدیو ارسال شد", status: "success"});
     } catch (err) {
         console.log(err);
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
@@ -255,7 +271,11 @@ router.post("/addMusicMessage", [requireAuth, upload.single("music")], async (re
         });
         await newMessage.save();
 
-        res.status(200).json({message: "موسیقی ارسال شد", status: "success"});
+        const message = await Message.findById(newMessage._id)
+            .populate("userId")
+            .exec();
+
+        res.status(200).json({data: message, message: "موسیقی ارسال شد", status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
@@ -298,7 +318,9 @@ router.delete("/deleteMessage", requireAuth, async (req, res) => {
             return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
         }
 
-        const message = await Message.findById(messageid);
+        const message = await Message.findById(messageid)
+            .populate("userId")
+            .exec();
 
         if (!message) {
             return res.status(409).json({message: "پیامی با این مشخصات وجود ندارد", status: "failure"});
@@ -333,7 +355,7 @@ router.delete("/deleteMessage", requireAuth, async (req, res) => {
 
         await Message.deleteOne({_id: messageid});
 
-        res.status(200).json({message: "چت حذف شد", status: "success"});
+        res.status(200).json({data: message, message: "چت حذف شد", status: "success"});
     } catch (err) {
         res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
     }
