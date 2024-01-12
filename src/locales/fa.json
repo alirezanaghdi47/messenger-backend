@@ -1,0 +1,10 @@
+{
+  "userNotFound": "کاربری با این مشخصات وجود ندارد",
+  "userDuplicate": "کاربر با این مشخصات وجود دارد",
+  "verifyCodeSent": "کد اعتبارسنجی برای شما ارسال شد",
+  "verifyCodeIsNotValid": "کد اعتبارسنجی معتبر نمی باشد",
+  "sessionIsNotValid": "اطلاعات معتبر نمی باشد",
+  "userRegistered": "کاربر عضو شد",
+  "userEdited" : "اطلاعا کاربری اصلاح شد",
+  "serverError": "مشکلی در سرور به وجود آمده است"
+}

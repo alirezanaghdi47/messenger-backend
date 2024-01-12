@@ -8,7 +8,7 @@ const requireAuth = async (req, res, next) => {
             if (err) {
                 res.status(401).json({message: "توکن شما معتبر نمی باشد", status: "failure"});
             } else {
-                res.locals.user = decodedToken.user;
+                res.locals.user = decodedToken;
                 next();
             }
         })

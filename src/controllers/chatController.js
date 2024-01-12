@@ -30,7 +30,7 @@ router.get("/getAllChat", requireAuth, async (req, res) => {
 
         res.status(200).json({data: chats, status: "success"});
     } catch (err) {
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 
@@ -39,7 +39,7 @@ router.get("/getChat", requireAuth, async (req, res) => {
         const {chatid} = req.headers;
 
         if (!isValidObjectId(chatid)) {
-            return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
+            return res.status(409).json({status: "failure"});
         }
 
         const chat = await Chat.findById(chatid)
@@ -48,7 +48,7 @@ router.get("/getChat", requireAuth, async (req, res) => {
 
         res.status(200).json({data: chat, status: "success"});
     } catch (err) {
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 
@@ -57,7 +57,7 @@ router.post("/addChat", requireAuth, async (req, res) => {
         const {receiverid} = req.headers;
 
         if (!isValidObjectId(receiverid)) {
-            return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
+            return res.status(409).json({status: "failure"});
         }
 
         const chat = await Chat.findOne({participantIds: {$all: [res.locals.user._id, receiverid]}})
@@ -80,7 +80,7 @@ router.post("/addChat", requireAuth, async (req, res) => {
 
         res.status(200).json({data: newChat2, status: "success"});
     } catch (err) {
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 
@@ -91,7 +91,7 @@ router.post("/addGroupChat", requireAuth, async (req, res) => {
 
         for (let i = 0; i < participantsids.length; i++) {
             if (!isValidObjectId(participantsids[i])) {
-                return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
+                return res.status(409).json({status: "failure"});
             }
         }
 
@@ -112,7 +112,7 @@ router.post("/addGroupChat", requireAuth, async (req, res) => {
         res.status(200).json({data: newChat, status: "success"});
     } catch
         (err) {
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 
@@ -121,7 +121,7 @@ router.delete("/deleteChat", requireAuth, async (req, res) => {
         const {chatid} = req.headers;
 
         if (!isValidObjectId(chatid)) {
-            return res.status(409).json({message: "فرمت id نادرست است", status: "failure"});
+            return res.status(409).json({status: "failure"});
         }
 
         const chat = await Chat.findById(chatid)
@@ -129,15 +129,15 @@ router.delete("/deleteChat", requireAuth, async (req, res) => {
             .exec();
 
         if (!chat) {
-            return res.status(409).json({message: "چت با این مشخصات وجود ندارد", status: "failure"});
+            return res.status(409).json({status: "failure"});
         }
 
         await Chat.deleteOne({_id: chatid});
         await Message.deleteMany({chatId: {$eq: chatid}});
 
-        res.status(200).json({data: chat, message: "چت حذف شد", status: "success"});
+        res.status(200).json({data: chat, status: "success"});
     } catch (err) {
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 

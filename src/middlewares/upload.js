@@ -47,8 +47,22 @@ const upload = multer({
         filename: (req, file, cb) => {
             const extArray = file.mimetype.split("/");
             const extension = extArray[extArray.length - 1];
-            cb(null, path.parse(file.originalname).name + '-' + Date.now() + '.' + extension);
-        }
+            const time = Date.now();
+            const filePath = path.parse(file.originalname).name + '-' + time + '.' + extension;
+
+            cb(null, filePath);
+
+            req.on("aborted" , () => {
+                file.stream.on('end', () => {
+                    fs.unlink(path.join("uploads" , filePath), (err) => {
+                        if (err) {
+                            throw err;
+                        }
+                    });
+                });
+                file.stream.emit('end');
+            })
+        },
     })
 });
 

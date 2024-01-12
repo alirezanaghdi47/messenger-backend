@@ -21,7 +21,7 @@ router.get("/getAllUser", requireAuth, async (req, res) => {
 
         res.status(200).json({data: users, status: "success"});
     } catch (err) {
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 
@@ -34,13 +34,13 @@ router.get("/getUser", requireAuth, async (req, res) => {
 
         res.status(200).json({data: user, status: "success"});
     } catch (err) {
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 
 router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, res) => {
     try {
-        const {preview , userName, biography} = req.body;
+        const {preview , biography} = req.body;
 
         let avatarPath = preview;
 
@@ -49,7 +49,10 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
             if (avatarPath) {
                 const fileName = path.basename(avatarPath);
                 const filePath = path.resolve("uploads" , "avatar" , fileName);
-                await fs.unlinkSync(filePath);
+
+                if (fs.existsSync(filePath)){
+                    await fs.unlinkSync(filePath);
+                }
             }
 
             const fileName = req.file.filename;
@@ -63,13 +66,13 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
             await fs.unlinkSync(oldFilePath);
 
             avatarPath = process.env.ASSET_URL + "/avatar/" + fileName;
+
         }
 
         await User.findOneAndUpdate(
             {_id: res.locals.user._id},
             {
                 avatar: avatarPath,
-                userName,
                 biography,
             },
             {new: true}
@@ -77,14 +80,13 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
 
         const result = {
             avatar: avatarPath,
-            userName,
             biography,
         };
 
-        res.status(200).json({data: result, message: "پروفایل اصلاح شد", status: "success"});
+        res.status(200).json({data: result, message: res.__("userEdited"), status: "success"});
     } catch (err) {
         console.log(err)
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 
@@ -98,9 +100,9 @@ router.put("/editLanguage", requireAuth, async (req, res) => {
             {new: true}
         );
 
-        res.status(200).json({data: language, message: "زبان اصلاح شد", status: "success"});
+        res.status(200).json({data: language, status: "success"});
     } catch (err) {
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 
@@ -114,9 +116,9 @@ router.put("/editColor", requireAuth, async (req, res) => {
             {new: true}
         );
 
-        res.status(200).json({data: color, message: "رنگ اصلاح شد", status: "success"});
+        res.status(200).json({data: color, status: "success"});
     } catch (err) {
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 
@@ -130,25 +132,9 @@ router.put("/editBackground", requireAuth, async (req, res) => {
             {new: true}
         );
 
-        res.status(200).json({data: background, message: "رنگ اصلاح شد", status: "success"});
+        res.status(200).json({data: background, status: "success"});
     } catch (err) {
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
-    }
-});
-
-router.put("/editFontSize", requireAuth, async (req, res) => {
-    try {
-        const {fontSize} = req.body;
-
-        await User.findOneAndUpdate(
-            {_id: res.locals.user._id},
-            {fontSize},
-            {new: true}
-        );
-
-        res.status(200).json({data: fontSize, message: "رنگ اصلاح شد", status: "success"});
-    } catch (err) {
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 
@@ -162,9 +148,9 @@ router.put("/editTheme", requireAuth, async (req, res) => {
             {new: true}
         );
 
-        res.status(200).json({data: darkMode, message: "تم اصلاح شد", status: "success"});
+        res.status(200).json({data: darkMode, status: "success"});
     } catch (err) {
-        res.status(500).json({message: "مشکلی در سرور به وجود آمده است", status: "failure"});
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 

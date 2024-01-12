@@ -1,8 +1,7 @@
 // libraries
 require("dotenv").config();
+const path = require("path");
 const express = require("express");
-const session = require('express-session');
-const passport = require('passport');
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const app = express();
@@ -13,6 +12,13 @@ const io = require("socket.io")(http, {
         origin: process.env.ORIGIN
     }
 });
+const {I18n} = require("i18n");
+
+const i18n = new I18n({
+    locales: ["fa" , "en"],
+    directory: path.join(__dirname , "src" , "locales"),
+    defaultLocale: "fa",
+})
 
 // controllers
 const authController = require("./src/controllers/authController.js");
@@ -20,47 +26,24 @@ const userController = require("./src/controllers/userController.js");
 const chatController = require("./src/controllers/chatController.js");
 const messageController = require("./src/controllers/messageController.js");
 
-// const {
-//     addChat,
-//     getAllChat,
-//     getChat,
-//     deleteChat,
-//     getAllMessage,
-//     addTextMessage,
-//     addFileMessage,
-//     addImageMessage,
-//     addVideoMessage,
-//     addMusicMessage,
-//     addLocationMessage,
-//     deleteMessage,
-//     getAllUser
-// } = require("./src/controllers/socketController.js");
-
 // middlewares
-app.use(
-    session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-    })
-);
-app.use(passport.initialize());
-app.use(passport.session());
 app.use(cors({"origin": process.env.ORIGIN}));
 app.use('/uploads', express.static(process.cwd() + '/uploads'));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
+app.use(i18n.init);
+// app.use(function (req, res, next){
+//    i18n.setLocale(req, req.headers["language"]);
+//    next();
+// });
 
 // routes
 app.use("/api/auth", authController);
 app.use("/api/user", userController);
 app.use("/api/message", messageController);
 app.use("/api/chat", chatController);
-
-// oauth
-require("./src/middlewares/passport");
 
 // connecting to database
 require("./src/utils/database.js");

@@ -10,9 +10,10 @@ const userSchema = mongoose.Schema({
         type: String,
         minLength: 8, 
         maxLength: 40,
+        unique: true,
         required: true
     },
-    email: {
+    phoneNumber: {
         type: String,
         required: true
     },
@@ -28,10 +29,6 @@ const userSchema = mongoose.Schema({
     darkMode: {
         type: Boolean,
         default: false,
-    },
-    fontSize: {
-        type: Number,
-        default: 14,
     },
     color: {
         light: {

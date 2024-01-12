@@ -8,7 +8,9 @@ const groupSchema = mongoose.Schema({
     },
     userName: {
         type: String,
+        minLength: 8,
         maxLength: 40,
+        unique: true,
         required: true,
     },
     biography: {
