@@ -1,8 +1,12 @@
 // libraries
+const path = require("path");
+const fs = require("fs");
 const express = require("express");
+const sharp = require("sharp");
 
 // middlewares
 const {requireAuth} = require("../middlewares/authentication");
+const {upload} = require("../middlewares/upload");
 
 // models
 const Chat = require("../models/chatModel.js");
@@ -54,7 +58,7 @@ router.get("/getChat", requireAuth, async (req, res) => {
 
 router.post("/addChat", requireAuth, async (req, res) => {
     try {
-        const {receiverid} = req.headers;
+        const {receiverid} = req.body;
 
         if (!isValidObjectId(receiverid)) {
             return res.status(409).json({status: "failure"});
@@ -84,34 +88,65 @@ router.post("/addChat", requireAuth, async (req, res) => {
     }
 });
 
-router.post("/addGroupChat", requireAuth, async (req, res) => {
+router.post("/addGroup", [requireAuth, upload.single("avatar")], async (req, res) => {
     try {
-        const {userName, avatar, biography} = req.body;
-        const {participantids} = req.headers;
+        const {name, description, receiverIds} = req.body;
 
-        for (let i = 0; i < participantsids.length; i++) {
-            if (!isValidObjectId(participantsids[i])) {
+        for (let i = 0; i < receiverIds.length; i++) {
+            if (!isValidObjectId(receiverIds[i])) {
                 return res.status(409).json({status: "failure"});
             }
         }
 
+        let avatarPath;
+
+        if (req.file) {
+
+            if (avatarPath) {
+                const fileName = path.basename(avatarPath);
+                const filePath = path.resolve("uploads" , "avatar" , fileName);
+
+                if (fs.existsSync(filePath)){
+                    await fs.unlinkSync(filePath);
+                }
+            }
+
+            const fileName = req.file.filename;
+            const oldFilePath = req.file.path;
+            const newFilePath = path.resolve("uploads" , "avatar", fileName);
+
+            await sharp(oldFilePath)
+                .resize({width: 240, height: 240, fit: "cover"})
+                .toFile(newFilePath);
+
+            await fs.unlinkSync(oldFilePath);
+
+            avatarPath = process.env.ASSET_URL + "/avatar/" + fileName;
+
+        }
+
         const newGroup = new Group({
-            userName,
-            avatar,
-            biography
+            name,
+            avatar: avatarPath,
+            description
         });
         await newGroup.save();
 
         const newChat = new Chat({
             type: chatType.group,
-            participantIds: [res.locals.user._id, ...participantids],
+            participantIds: [res.locals.user._id, ...receiverIds],
             groupId: newGroup?._id
         });
         await newChat.save();
 
-        res.status(200).json({data: newChat, status: "success"});
-    } catch
-        (err) {
+        const newChat2 = await Chat.findById(newChat._id)
+            .populate("groupId")
+            .populate("participantIds")
+            .exec();
+
+        res.status(200).json({data: newChat2, status: "success"});
+    } catch (err) {
+        console.log(err);
         res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
@@ -130,6 +165,10 @@ router.delete("/deleteChat", requireAuth, async (req, res) => {
 
         if (!chat) {
             return res.status(409).json({status: "failure"});
+        }
+
+        if (chat?.groupId){
+            await Group.deleteOne({_id: chat?.groupId});
         }
 
         await Chat.deleteOne({_id: chatid});

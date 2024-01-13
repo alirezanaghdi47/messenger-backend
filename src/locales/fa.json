@@ -6,5 +6,6 @@
   "sessionIsNotValid": "اطلاعات معتبر نمی باشد",
   "userRegistered": "کاربر عضو شد",
   "userEdited" : "اطلاعا کاربری اصلاح شد",
-  "serverError": "مشکلی در سرور به وجود آمده است"
+  "serverError": "مشکلی در سرور به وجود آمده است",
+  "userEntered": "خوش آمدید"
 }

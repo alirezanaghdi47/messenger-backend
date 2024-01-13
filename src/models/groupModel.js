@@ -6,14 +6,14 @@ const groupSchema = mongoose.Schema({
         type: String,
         default: null,
     },
-    userName: {
+    name: {
         type: String,
         minLength: 8,
         maxLength: 40,
         unique: true,
         required: true,
     },
-    biography: {
+    description: {
         type: String,
         default: null,
         maxLength: 200,

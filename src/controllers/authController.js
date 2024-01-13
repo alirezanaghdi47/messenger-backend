@@ -109,7 +109,7 @@ router.post("/verifyUser", async (req, res) => {
 
         await Session.deleteOne({_id: session._id});
 
-        res.status(200).json({data: token , message: res.__("userRegistered"), status: "success"});
+        res.status(200).json({data: token , message: res.__("userEntered"), status: "success"});
     } catch (err) {
         console.log(err)
         res.status(200).json({message: res.__("serverError"), status: "failure"});
