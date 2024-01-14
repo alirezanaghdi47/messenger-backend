@@ -58,13 +58,13 @@ router.get("/getChat", requireAuth, async (req, res) => {
 
 router.post("/addChat", requireAuth, async (req, res) => {
     try {
-        const {receiverid} = req.body;
+        const {receiverId} = req.body;
 
-        if (!isValidObjectId(receiverid)) {
+        if (!isValidObjectId(receiverId)) {
             return res.status(409).json({status: "failure"});
         }
 
-        const chat = await Chat.findOne({participantIds: {$all: [res.locals.user._id, receiverid]}})
+        const chat = await Chat.findOne({participantIds: {$all: [res.locals.user._id, receiverId]}})
             .populate("participantIds")
             .exec();
 
@@ -74,7 +74,7 @@ router.post("/addChat", requireAuth, async (req, res) => {
 
         const newChat = new Chat({
             type: chatType.user,
-            participantIds: [res.locals.user._id, receiverid],
+            participantIds: [res.locals.user._id, receiverId],
         });
         await newChat.save();
 
