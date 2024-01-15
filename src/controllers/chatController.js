@@ -16,6 +16,7 @@ const Message = require("../models/messageModel.js");
 // utils
 const {isValidObjectId} = require("../utils/functions");
 const {chatType} = require("../utils/constants");
+const User = require("../models/userModel");
 
 const router = express.Router();
 
@@ -104,16 +105,16 @@ router.post("/addGroup", [requireAuth, upload.single("avatar")], async (req, res
 
             if (avatarPath) {
                 const fileName = path.basename(avatarPath);
-                const filePath = path.resolve("uploads" , "avatar" , fileName);
+                const filePath = path.resolve("uploads", "avatar", fileName);
 
-                if (fs.existsSync(filePath)){
+                if (fs.existsSync(filePath)) {
                     await fs.unlinkSync(filePath);
                 }
             }
 
             const fileName = req.file.filename;
             const oldFilePath = req.file.path;
-            const newFilePath = path.resolve("uploads" , "avatar", fileName);
+            const newFilePath = path.resolve("uploads", "avatar", fileName);
 
             await sharp(oldFilePath)
                 .resize({width: 240, height: 240, fit: "cover"})
@@ -151,6 +152,67 @@ router.post("/addGroup", [requireAuth, upload.single("avatar")], async (req, res
     }
 });
 
+router.put("/joinGroup", requireAuth, async (req, res) => {
+    try {
+        const {receiverIds} = req.body;
+        const {chatid} = req.headers;
+
+        if (!isValidObjectId(chatid)) {
+            return res.status(409).json({status: "failure"});
+        }
+
+        const chat = await Chat.findById(chatid);
+
+        if (!chat) {
+            return res.status(409).json({status: "failure"});
+        }
+
+        await Chat.findOneAndUpdate(
+            {_id: chatid},
+            {participantIds: [...chat.participantIds.filter(userId => !receiverIds.includes(userId.toString())), ...receiverIds]},
+            {new: true}
+        );
+
+        const chat2 = await Chat.findById(chatid)
+            .populate("groupId")
+            .populate("participantIds")
+            .exec();
+
+        res.status(200).json({data: chat2, status: "success"});
+    } catch (err) {
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
+    }
+});
+
+router.put("/leaveGroup", requireAuth, async (req, res) => {
+    try {
+        const {chatid} = req.headers;
+
+        if (!isValidObjectId(chatid)) {
+            return res.status(409).json({status: "failure"});
+        }
+
+        const chat = await Chat.findById(chatid);
+
+        if (!chat) {
+            return res.status(409).json({status: "failure"});
+        }
+
+        const chat2 = await Chat.findOneAndUpdate(
+            {_id: chatid},
+            {participantIds: chat.participantIds.filter(userId => userId.toString() !== res.locals.user._id.toString())},
+            {new: true}
+        )
+            .populate("groupId")
+            .populate("participantIds")
+            .exec();
+
+        res.status(200).json({data: chat2, status: "success"});
+    } catch (err) {
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
+    }
+});
+
 router.delete("/deleteChat", requireAuth, async (req, res) => {
     try {
         const {chatid} = req.headers;
@@ -167,7 +229,7 @@ router.delete("/deleteChat", requireAuth, async (req, res) => {
             return res.status(409).json({status: "failure"});
         }
 
-        if (chat?.groupId){
+        if (chat?.groupId) {
             await Group.deleteOne({_id: chat?.groupId});
         }
 

@@ -78,6 +78,18 @@ io.on('connection', (socket) => {
         });
     });
 
+    socket.on("joinGroup", async (data) => {
+        activeUsers.filter(user => data.receiverIds.includes(user.userId)).map(item => {
+            socket.to(item.socketId).emit("joinGroupResponse", data.chat);
+        });
+    });
+
+    socket.on("leaveGroup", async (data) => {
+        activeUsers.filter(user => data.receiverIds.includes(user.userId)).map(item => {
+            socket.to(item.socketId).emit("leaveGroupResponse", data.chat);
+        });
+    });
+
     socket.on("deleteChat", async (data) => {
         activeUsers.filter(user => data.receiverIds.includes(user.userId)).map(item => {
             socket.to(item.socketId).emit("deleteChatResponse", data.chat?._id);
