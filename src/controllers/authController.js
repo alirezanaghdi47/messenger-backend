@@ -3,6 +3,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const fetch = require("node-fetch");
 
+// middleware
 const limiter = require("../middlewares/rateLimit");
 
 // models
@@ -14,6 +15,10 @@ const router = express.Router();
 router.post("/register", limiter, async (req, res) => {
     try {
         const {userName, phoneNumber} = req.body;
+
+        if (req.rateLimit.remaining === 0){
+            return res.status(200).json({message: res.__("rateLimiter"), status: "failure"});
+        }
 
         const user = await User.findOne({phoneNumber: {$eq: phoneNumber}});
 
@@ -37,6 +42,10 @@ router.post("/register", limiter, async (req, res) => {
 router.post("/login", limiter, async (req, res) => {
     try {
         const {phoneNumber} = req.body;
+
+        if (req.rateLimit.remaining === 0){
+            return res.status(200).json({message: res.__("rateLimiter"), status: "failure"});
+        }
 
         const user = await User.findOne({phoneNumber: {$eq: phoneNumber}});
 
