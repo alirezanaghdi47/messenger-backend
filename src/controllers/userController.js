@@ -25,6 +25,20 @@ router.get("/getAllUser", requireAuth, async (req, res) => {
     }
 });
 
+router.get("/getAllRemainingUser", requireAuth, async (req, res) => {
+    try {
+        const {filtereduserids} = req.headers;
+
+        const users = await User.find({_id: {$nin: [res.locals.user._id, ...JSON.parse(filtereduserids)]}})
+            .sort({createAt: -1})
+            .exec();
+
+        res.status(200).json({data: users, status: "success"});
+    } catch (err) {
+        res.status(200).json({message: res.__("serverError"), status: "failure"});
+    }
+});
+
 router.get("/getUser", requireAuth, async (req, res) => {
     try {
         const {userid} = req.body;
@@ -40,7 +54,7 @@ router.get("/getUser", requireAuth, async (req, res) => {
 
 router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, res) => {
     try {
-        const {preview , biography} = req.body;
+        const {preview, biography} = req.body;
 
         let avatarPath = preview;
 
@@ -48,16 +62,16 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
 
             if (avatarPath) {
                 const fileName = path.basename(avatarPath);
-                const filePath = path.resolve("uploads" , "avatar" , fileName);
+                const filePath = path.resolve("uploads", "avatar", fileName);
 
-                if (fs.existsSync(filePath)){
+                if (fs.existsSync(filePath)) {
                     await fs.unlinkSync(filePath);
                 }
             }
 
             const fileName = req.file.filename;
             const oldFilePath = req.file.path;
-            const newFilePath = path.resolve("uploads" , "avatar", fileName);
+            const newFilePath = path.resolve("uploads", "avatar", fileName);
 
             await sharp(oldFilePath)
                 .resize({width: 240, height: 240, fit: "cover"})

@@ -3,13 +3,15 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const fetch = require("node-fetch");
 
+const limiter = require("../middlewares/rateLimit");
+
 // models
 const User = require("../models/userModel.js");
 const Session = require("../models/sessionModel.js");
 
 const router = express.Router();
 
-router.post("/register", async (req, res) => {
+router.post("/register", limiter, async (req, res) => {
     try {
         const {userName, phoneNumber} = req.body;
 
@@ -24,7 +26,7 @@ router.post("/register", async (req, res) => {
 
         res.status(200).json({message: res.__("userRegistered"), status: "success"});
     } catch (err) {
-        if (err.code === 11000 && err.keyPattern.userName === 1){
+        if (err.code === 11000 && err.keyPattern.userName === 1) {
             return res.status(200).json({message: res.__("userDuplicate"), status: "failure"});
         }
 
@@ -32,7 +34,7 @@ router.post("/register", async (req, res) => {
     }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", limiter, async (req, res) => {
     try {
         const {phoneNumber} = req.body;
 
@@ -45,7 +47,7 @@ router.post("/login", async (req, res) => {
         const randomNumber = Math.floor(100000 + Math.random() * 900000);
 
         // send sms
-        const smsResponse = await fetch("https://api.sms.ir/v1/send/verify" , {
+        const smsResponse = await fetch("https://api.sms.ir/v1/send/verify", {
             method: 'post',
             headers: {
                 'Content-Type': 'application/json',
@@ -72,16 +74,24 @@ router.post("/login", async (req, res) => {
         });
         await newSession.save();
 
-        res.status(200).json({data: {expire: newSession.expire , userId: user._id} , message: res.__("verifyCodeSent"), status: "success"});
+        res.status(200).json({
+            data: {expire: newSession.expire, userId: user._id},
+            message: res.__("verifyCodeSent"),
+            status: "success"
+        });
     } catch (err) {
         res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 
-router.post("/verifyUser", async (req, res) => {
+router.post("/verifyUser", limiter, async (req, res) => {
     try {
         const {code} = req.body;
-        const {expire , userid} = req.headers;
+        const {expire, userid} = req.headers;
+
+        if (req.rateLimit.remaining === 0){
+            return res.status(200).json({message: res.__("rateLimiter"), status: "failure"});
+        }
 
         const user = await User.findById(userid);
 
@@ -89,7 +99,7 @@ router.post("/verifyUser", async (req, res) => {
             return res.status(200).json({message: res.__("userNotFound"), status: "failure"});
         }
 
-        if (Math.floor(Date.now() / 1000) > expire){
+        if (Math.floor(Date.now() / 1000) > expire) {
             return res.status(200).json({message: res.__("verifyCodeIsNotValid"), status: "failure"});
         }
 
@@ -109,7 +119,7 @@ router.post("/verifyUser", async (req, res) => {
 
         await Session.deleteOne({_id: session._id});
 
-        res.status(200).json({data: token , message: res.__("userEntered"), status: "success"});
+        res.status(200).json({data: token, message: res.__("userEntered"), status: "success"});
     } catch (err) {
         console.log(err)
         res.status(200).json({message: res.__("serverError"), status: "failure"});

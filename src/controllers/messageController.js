@@ -16,7 +16,7 @@ const Message = require("../models/messageModel.js");
 const Chat = require("../models/chatModel.js");
 
 // utils
-const {isValidObjectId} = require("../utils/functions");
+const {isValidObjectId, delay} = require("../utils/functions");
 const {messageType} = require("../utils/constants");
 
 const router = express.Router();
@@ -205,9 +205,10 @@ router.post("/addVideoMessage", [requireAuth, upload.single("video")], async (re
                 filename: fileThumbnailName,
                 folder: fileThumbnailFolder,
                 size: "640x360"
-            }).on('end', function () {
-                console.log('done');
-            });
+            })
+            // .on('end', function () {
+            //     console.log('done');
+            // });
 
         const newMessage = new Message({
             type: messageType.video,
@@ -220,6 +221,8 @@ router.post("/addVideoMessage", [requireAuth, upload.single("video")], async (re
             chatId: chatid
         });
         await newMessage.save();
+
+        await delay(500);
 
         const message = await Message.findById(newMessage._id)
             .populate("userId")
@@ -275,7 +278,7 @@ router.post("/addMusicMessage", [requireAuth, upload.single("music")], async (re
             .populate("userId")
             .exec();
 
-        res.status(200).json({data: message,status: "success"});
+        res.status(200).json({data: message, status: "success"});
     } catch (err) {
         res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
@@ -346,16 +349,16 @@ router.delete("/deleteMessage", requireAuth, async (req, res) => {
 
         if (message.type === 4) {
             const fileName1 = path.basename(message?.content);
-            // const fileName2 = path.basename(message?.thumbnail);
+            const fileName2 = path.basename(message?.thumbnail);
             const filePath1 = path.resolve("uploads", "video", fileName1);
-            // const filePath2 = path.resolve("uploads", "thumbnail", fileName2);
+            const filePath2 = path.resolve("uploads", "thumbnail", fileName2);
             await fs.unlinkSync(filePath1);
-            // await fs.unlinkSync(filePath2);
+            await fs.unlinkSync(filePath2);
         }
 
         await Message.deleteOne({_id: messageid});
 
-        res.status(200).json({data: message,status: "success"});
+        res.status(200).json({data: message, status: "success"});
     } catch (err) {
         res.status(200).json({message: res.__("serverError"), status: "failure"});
     }

@@ -129,13 +129,14 @@ router.post("/addGroup", [requireAuth, upload.single("avatar")], async (req, res
         const newGroup = new Group({
             name,
             avatar: avatarPath,
-            description
+            description,
+            adminId: res.locals.user._id
         });
         await newGroup.save();
 
         const newChat = new Chat({
             type: chatType.group,
-            participantIds: [res.locals.user._id, ...receiverIds],
+            participantIds: receiverIds,
             groupId: newGroup?._id
         });
         await newChat.save();
@@ -222,6 +223,7 @@ router.delete("/deleteChat", requireAuth, async (req, res) => {
         }
 
         const chat = await Chat.findById(chatid)
+            .populate("groupId")
             .populate("participantIds")
             .exec();
 
@@ -230,7 +232,41 @@ router.delete("/deleteChat", requireAuth, async (req, res) => {
         }
 
         if (chat?.groupId) {
-            await Group.deleteOne({_id: chat?.groupId});
+            const fileName = path.basename(chat?.groupId?.avatar);
+            const filePath = path.resolve("uploads", "avatar", fileName);
+            await fs.unlinkSync(filePath);
+            await Group.deleteOne({_id: chat?.groupId?._id});
+        }
+
+        const messages = await Message.find({chatId: chatid}).exec();
+
+        for (let i = 0; i < messages.length; i++) {
+            if (messages[i].type === 1) {
+                const fileName = path.basename(messages[i]?.content);
+                const filePath = path.resolve("uploads", "file", fileName);
+                await fs.unlinkSync(filePath);
+            }
+
+            if (messages[i].type === 2) {
+                const fileName = path.basename(messages[i]?.content);
+                const filePath = path.resolve("uploads", "image", fileName);
+                await fs.unlinkSync(filePath);
+            }
+
+            if (messages[i].type === 3) {
+                const fileName = path.basename(messages[i]?.content);
+                const filePath = path.resolve("uploads", "music", fileName);
+                await fs.unlinkSync(filePath);
+            }
+
+            if (messages[i].type === 4) {
+                const fileName1 = path.basename(messages[i]?.content);
+                const fileName2 = path.basename(messages[i]?.thumbnail);
+                const filePath1 = path.resolve("uploads", "video", fileName1);
+                const filePath2 = path.resolve("uploads", "thumbnail", fileName2);
+                await fs.unlinkSync(filePath1);
+                await fs.unlinkSync(filePath2);
+            }
         }
 
         await Chat.deleteOne({_id: chatid});

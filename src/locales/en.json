@@ -7,5 +7,6 @@
   "userRegistered" : "User registered",
   "userEdited" : "User information edited",
   "serverError": "An error occur in server",
-  "userEntered": "Welcome"
+  "userEntered": "Welcome",
+  "rateLimiter": "Please retry in next minute"
 }
