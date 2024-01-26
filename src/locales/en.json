@@ -1,6 +1,8 @@
 {
   "userNotFound": "User not found",
-  "userDuplicate": "User duplicated",
+  "userNameDuplicate": "Username duplicated",
+  "phoneNumberDuplicate": "Phone Number duplicated",
+  "groupNameDuplicate": "Group Name duplicated",
   "verifyCodeSent": "Verify code sent",
   "verifyCodeIsNotValid": "Verify code is not valid",
   "sessionIsNotValid": "Information is not valid",

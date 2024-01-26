@@ -284,35 +284,6 @@ router.post("/addMusicMessage", [requireAuth, upload.single("music")], async (re
     }
 });
 
-router.post("/addLocationMessage", requireAuth, async (req, res) => {
-    try {
-        const {location} = req.body;
-        const {chatid} = req.headers;
-
-        if (!isValidObjectId(chatid)) {
-            return res.status(409).json({status: "failure"});
-        }
-
-        const chat = await Chat.findById(chatid);
-
-        if (!chat) {
-            return res.status(409).json({status: "failure"});
-        }
-
-        const newMessage = new Message({
-            type: messageType.location,
-            content: `https://www.google.com/maps/place/${location.latitude},${location.longitude}`,
-            userId: res.locals.user._id,
-            chatId: chatid
-        });
-        await newMessage.save();
-
-        res.status(200).json({status: "success"});
-    } catch (err) {
-        res.status(200).json({message: res.__("serverError"), status: "failure"});
-    }
-});
-
 router.delete("/deleteMessage", requireAuth, async (req, res) => {
     try {
         const {messageid} = req.headers;
@@ -332,19 +303,28 @@ router.delete("/deleteMessage", requireAuth, async (req, res) => {
         if (message.type === 1) {
             const fileName = path.basename(message?.content);
             const filePath = path.resolve("uploads", "file", fileName);
-            await fs.unlinkSync(filePath);
+
+            if (fs.existsSync(filePath)) {
+                await fs.unlinkSync(filePath);
+            }
         }
 
         if (message.type === 2) {
             const fileName = path.basename(message?.content);
             const filePath = path.resolve("uploads", "image", fileName);
-            await fs.unlinkSync(filePath);
+
+            if (fs.existsSync(filePath)) {
+                await fs.unlinkSync(filePath);
+            }
         }
 
         if (message.type === 3) {
             const fileName = path.basename(message?.content);
             const filePath = path.resolve("uploads", "music", fileName);
-            await fs.unlinkSync(filePath);
+
+            if (fs.existsSync(filePath)) {
+                await fs.unlinkSync(filePath);
+            }
         }
 
         if (message.type === 4) {
@@ -352,8 +332,14 @@ router.delete("/deleteMessage", requireAuth, async (req, res) => {
             const fileName2 = path.basename(message?.thumbnail);
             const filePath1 = path.resolve("uploads", "video", fileName1);
             const filePath2 = path.resolve("uploads", "thumbnail", fileName2);
-            await fs.unlinkSync(filePath1);
-            await fs.unlinkSync(filePath2);
+
+            if (fs.existsSync(filePath1)) {
+                await fs.unlinkSync(filePath1);
+            }
+
+            if (fs.existsSync(filePath2)) {
+                await fs.unlinkSync(filePath2);
+            }
         }
 
         await Message.deleteOne({_id: messageid});

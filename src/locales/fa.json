@@ -1,6 +1,8 @@
 {
 	"userNotFound": "کاربری با این مشخصات وجود ندارد",
-	"userDuplicate": "کاربر با این مشخصات وجود دارد",
+	"userNameDuplicate": "نام کاربری قبلا ثبت شده است",
+	"phoneNumberDuplicate": "شماره همراه قبلا ثبت شده است",
+	"groupNameDuplicate": "گروه با این نام قبلا ثبت شده است",
 	"verifyCodeSent": "کد اعتبارسنجی برای شما ارسال شد",
 	"verifyCodeIsNotValid": "کد اعتبارسنجی معتبر نمی باشد",
 	"sessionIsNotValid": "اطلاعات معتبر نمی باشد",
@@ -8,5 +10,6 @@
 	"userEdited": "اطلاعا کاربری اصلاح شد",
 	"serverError": "مشکلی در سرور به وجود آمده است",
 	"userEntered": "خوش آمدید",
-	"rateLimiter": "لطفا دقایقی دیگر تلاش کنید"
+	"rateLimiter": "لطفا دقایقی دیگر تلاش کنید",
+	"userDuplicate": "userDuplicate"
 }

@@ -31,9 +31,9 @@ const uploadController = require("./src/controllers/uploadController.js");
 app.use(cors({"origin": process.env.ORIGIN}));
 app.use('/uploads', express.static(process.cwd() + '/uploads'));
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
-app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(i18n.init);
 // app.use(function (req, res, next){
 //    i18n.setLocale(req, req.headers["language"]);
@@ -80,15 +80,15 @@ io.on('connection', (socket) => {
         });
     });
 
-    socket.on("joinGroup", async (data) => {
+    socket.on("joinGroupChat", async (data) => {
         activeUsers.filter(user => data.receiverIds.includes(user.userId)).map(item => {
-            socket.to(item.socketId).emit("joinGroupResponse", data.chat);
+            socket.to(item.socketId).emit("joinGroupChatResponse", data.chat);
         });
     });
 
-    socket.on("leaveGroup", async (data) => {
+    socket.on("leaveGroupChat", async (data) => {
         activeUsers.filter(user => data.receiverIds.includes(user.userId)).map(item => {
-            socket.to(item.socketId).emit("leaveGroupResponse", data.chat);
+            socket.to(item.socketId).emit("leaveGroupChatResponse", data.chat);
         });
     });
 

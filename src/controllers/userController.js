@@ -77,10 +77,11 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
                 .resize({width: 240, height: 240, fit: "cover"})
                 .toFile(newFilePath);
 
-            await fs.unlinkSync(oldFilePath);
+            if (fs.existsSync(oldFilePath)) {
+                await fs.unlinkSync(oldFilePath);
+            }
 
             avatarPath = process.env.ASSET_URL + "/avatar/" + fileName;
-
         }
 
         await User.findOneAndUpdate(

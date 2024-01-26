@@ -23,7 +23,7 @@ router.post("/register", limiter, async (req, res) => {
         const user = await User.findOne({phoneNumber: {$eq: phoneNumber}});
 
         if (user) {
-            return res.status(200).json({message: res.__("userDuplicate"), status: "failure"});
+            return res.status(200).json({message: res.__("phoneNumberDuplicate"), status: "failure"});
         }
 
         const newUser = new User({userName, phoneNumber});
@@ -31,8 +31,8 @@ router.post("/register", limiter, async (req, res) => {
 
         res.status(200).json({message: res.__("userRegistered"), status: "success"});
     } catch (err) {
-        if (err.code === 11000 && err.keyPattern.userName === 1) {
-            return res.status(200).json({message: res.__("userDuplicate"), status: "failure"});
+        if (err.code === 11000) {
+            return res.status(200).json({message: res.__("userNameDuplicate"), status: "failure"});
         }
 
         res.status(200).json({message: res.__("serverError"), status: "failure"});
@@ -93,7 +93,7 @@ router.post("/login", limiter, async (req, res) => {
     }
 });
 
-router.post("/verifyUser", limiter, async (req, res) => {
+router.post("/verify", limiter, async (req, res) => {
     try {
         const {code} = req.body;
         const {expire, userid} = req.headers;

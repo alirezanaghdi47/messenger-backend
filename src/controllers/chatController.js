@@ -16,7 +16,6 @@ const Message = require("../models/messageModel.js");
 // utils
 const {isValidObjectId} = require("../utils/functions");
 const {chatType} = require("../utils/constants");
-const User = require("../models/userModel");
 
 const router = express.Router();
 
@@ -89,15 +88,9 @@ router.post("/addChat", requireAuth, async (req, res) => {
     }
 });
 
-router.post("/addGroup", [requireAuth, upload.single("avatar")], async (req, res) => {
+router.post("/addGroupChat", [requireAuth, upload.single("avatar")], async (req, res) => {
     try {
-        const {name, description, receiverIds} = req.body;
-
-        for (let i = 0; i < receiverIds.length; i++) {
-            if (!isValidObjectId(receiverIds[i])) {
-                return res.status(409).json({status: "failure"});
-            }
-        }
+        const {name, description} = req.body;
 
         let avatarPath;
 
@@ -120,10 +113,11 @@ router.post("/addGroup", [requireAuth, upload.single("avatar")], async (req, res
                 .resize({width: 240, height: 240, fit: "cover"})
                 .toFile(newFilePath);
 
-            await fs.unlinkSync(oldFilePath);
+            if (fs.existsSync(oldFilePath)) {
+                await fs.unlinkSync(oldFilePath);
+            }
 
             avatarPath = process.env.ASSET_URL + "/avatar/" + fileName;
-
         }
 
         const newGroup = new Group({
@@ -136,8 +130,8 @@ router.post("/addGroup", [requireAuth, upload.single("avatar")], async (req, res
 
         const newChat = new Chat({
             type: chatType.group,
-            participantIds: receiverIds,
-            groupId: newGroup?._id
+            groupId: newGroup?._id,
+            participantIds: [res.locals.user._id],
         });
         await newChat.save();
 
@@ -148,12 +142,15 @@ router.post("/addGroup", [requireAuth, upload.single("avatar")], async (req, res
 
         res.status(200).json({data: newChat2, status: "success"});
     } catch (err) {
-        console.log(err);
+        if (err.code === 11000) {
+            return res.status(200).json({message: res.__("groupNameDuplicate"), status: "failure"});
+        }
+
         res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
 
-router.put("/joinGroup", requireAuth, async (req, res) => {
+router.put("/joinGroupChat", requireAuth, async (req, res) => {
     try {
         const {receiverIds} = req.body;
         const {chatid} = req.headers;
@@ -170,7 +167,7 @@ router.put("/joinGroup", requireAuth, async (req, res) => {
 
         await Chat.findOneAndUpdate(
             {_id: chatid},
-            {participantIds: [...chat.participantIds.filter(userId => !receiverIds.includes(userId.toString())), ...receiverIds]},
+            {participantIds: [...chat.participantIds.filter(userId => !receiverIds?.map(user => user._id).includes(userId.toString())), ...receiverIds?.map(user => user._id)]},
             {new: true}
         );
 
@@ -185,7 +182,7 @@ router.put("/joinGroup", requireAuth, async (req, res) => {
     }
 });
 
-router.put("/leaveGroup", requireAuth, async (req, res) => {
+router.put("/leaveGroupChat", requireAuth, async (req, res) => {
     try {
         const {chatid} = req.headers;
 
@@ -232,9 +229,15 @@ router.delete("/deleteChat", requireAuth, async (req, res) => {
         }
 
         if (chat?.groupId) {
-            const fileName = path.basename(chat?.groupId?.avatar);
-            const filePath = path.resolve("uploads", "avatar", fileName);
-            await fs.unlinkSync(filePath);
+            if (chat?.groupId?.avatar) {
+                const fileName = path.basename(chat?.groupId?.avatar);
+                const filePath = path.resolve("uploads", "avatar", fileName);
+
+                if (fs.existsSync(filePath)) {
+                    await fs.unlinkSync(filePath);
+                }
+            }
+
             await Group.deleteOne({_id: chat?.groupId?._id});
         }
 
@@ -244,19 +247,28 @@ router.delete("/deleteChat", requireAuth, async (req, res) => {
             if (messages[i].type === 1) {
                 const fileName = path.basename(messages[i]?.content);
                 const filePath = path.resolve("uploads", "file", fileName);
-                await fs.unlinkSync(filePath);
+
+                if (fs.existsSync(filePath)) {
+                    await fs.unlinkSync(filePath);
+                }
             }
 
             if (messages[i].type === 2) {
                 const fileName = path.basename(messages[i]?.content);
                 const filePath = path.resolve("uploads", "image", fileName);
-                await fs.unlinkSync(filePath);
+
+                if (fs.existsSync(filePath)) {
+                    await fs.unlinkSync(filePath);
+                }
             }
 
             if (messages[i].type === 3) {
                 const fileName = path.basename(messages[i]?.content);
                 const filePath = path.resolve("uploads", "music", fileName);
-                await fs.unlinkSync(filePath);
+
+                if (fs.existsSync(filePath)) {
+                    await fs.unlinkSync(filePath);
+                }
             }
 
             if (messages[i].type === 4) {
@@ -264,8 +276,14 @@ router.delete("/deleteChat", requireAuth, async (req, res) => {
                 const fileName2 = path.basename(messages[i]?.thumbnail);
                 const filePath1 = path.resolve("uploads", "video", fileName1);
                 const filePath2 = path.resolve("uploads", "thumbnail", fileName2);
-                await fs.unlinkSync(filePath1);
-                await fs.unlinkSync(filePath2);
+
+                if (fs.existsSync(filePath1)) {
+                    await fs.unlinkSync(filePath1);
+                }
+
+                if (fs.existsSync(filePath2)) {
+                    await fs.unlinkSync(filePath2);
+                }
             }
         }
 
