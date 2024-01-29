@@ -42,5 +42,5 @@ module.exports = {
     removeFile,
     getFileExtension,
     getFileName,
-    delay
+    delay,
 }

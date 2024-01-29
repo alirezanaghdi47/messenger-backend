@@ -1,6 +1,5 @@
 // libraries
 require("dotenv").config();
-const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -12,13 +11,6 @@ const io = require("socket.io")(http, {
         origin: process.env.ORIGIN
     }
 });
-const {I18n} = require("i18n");
-
-const i18n = new I18n({
-    locales: ["fa" , "en"],
-    directory: path.join(__dirname , "src" , "locales"),
-    defaultLocale: "fa",
-})
 
 // controllers
 const authController = require("./src/controllers/authController.js");
@@ -28,17 +20,16 @@ const messageController = require("./src/controllers/messageController.js");
 const uploadController = require("./src/controllers/uploadController.js");
 
 // middlewares
+const {i18n} = require("./src/middlewares/i18n");
+const {requiredAuth} = require("./src/middlewares/socket");
+
 app.use(cors({"origin": process.env.ORIGIN}));
 app.use('/uploads', express.static(process.cwd() + '/uploads'));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(i18n.init);
-// app.use(function (req, res, next){
-//    i18n.setLocale(req, req.headers["language"]);
-//    next();
-// });
 
 // routes
 app.use("/api/auth", authController);
@@ -55,6 +46,10 @@ http.listen(process.env.PORT, () => {
     console.log(`Server listening on port ${process.env.PORT}`);
 });
 
+// middlewares
+io.use(requiredAuth);
+
+// active users
 let activeUsers = [];
 
 // connecting to socket
