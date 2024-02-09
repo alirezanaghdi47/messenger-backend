@@ -206,9 +206,9 @@ router.post("/addVideoMessage", [requireAuth, upload.single("video")], async (re
                 folder: fileThumbnailFolder,
                 size: "640x360"
             })
-            // .on('end', function () {
-            //     console.log('done');
-            // });
+        // .on('end', function () {
+        //     console.log('done');
+        // });
 
         const newMessage = new Message({
             type: messageType.video,
@@ -230,7 +230,6 @@ router.post("/addVideoMessage", [requireAuth, upload.single("video")], async (re
 
         res.status(200).json({data: message, status: "success"});
     } catch (err) {
-        console.log(err);
         res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });

@@ -130,7 +130,6 @@ router.post("/verify", limiter, async (req, res) => {
 
         res.status(200).json({data: token, message: res.__("userEntered"), status: "success"});
     } catch (err) {
-        console.log(err)
         res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });

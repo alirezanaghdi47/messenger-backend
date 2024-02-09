@@ -16,7 +16,7 @@ const chatSchema = mongoose.Schema({
     groupId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Group",
-    }
+    },
 }, {timestamps: true});
 
 const Chat = mongoose.model("Chat", chatSchema);

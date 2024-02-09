@@ -100,7 +100,6 @@ router.put("/editProfile", [requireAuth, upload.single("avatar")], async (req, r
 
         res.status(200).json({data: result, message: res.__("userEdited"), status: "success"});
     } catch (err) {
-        console.log(err)
         res.status(200).json({message: res.__("serverError"), status: "failure"});
     }
 });
