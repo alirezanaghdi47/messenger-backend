@@ -17,6 +17,7 @@ const authController = require("./src/controllers/authController.js");
 const userController = require("./src/controllers/userController.js");
 const chatController = require("./src/controllers/chatController.js");
 const messageController = require("./src/controllers/messageController.js");
+const notificationController = require("./src/controllers/notificationController.js");
 
 // middlewares
 const {i18n} = require("./src/middlewares/i18n");
@@ -33,8 +34,9 @@ app.use(i18n.init);
 // routes
 app.use("/api/auth", authController);
 app.use("/api/user", userController);
-app.use("/api/message", messageController);
 app.use("/api/chat", chatController);
+app.use("/api/message", messageController);
+app.use("/api/notification", notificationController);
 
 // connecting to database
 require("./src/utils/database.js");
